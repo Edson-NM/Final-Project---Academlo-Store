@@ -30,7 +30,7 @@ const initModels = () => {
 
 	// 1 Product <---> 1 Category
 	Category.hasOne(Product);
-	Product.belongsTo();
+	Product.belongsTo(Category);
 
 	// 1 Product <---> 1 ProductInCart
 	Product.hasOne(ProductInCart);
