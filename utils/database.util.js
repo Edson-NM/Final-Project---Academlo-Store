@@ -12,12 +12,12 @@ const db = new Sequelize({
 	port: process.env.DB_PORT,
 	database: process.env.DB,
 	logging: false,
-	// dialectOptions: {
-	// 	ssl: {
-	// 	  require: true,
-	// 	  rejectUnauthorized: false,
-	// 	},
-	//   },
+	dialectOptions: {
+		ssl: {
+			require: true,
+			rejectUnauthorized: false,
+		},
+	},
 });
 
 module.exports = { db, DataTypes };

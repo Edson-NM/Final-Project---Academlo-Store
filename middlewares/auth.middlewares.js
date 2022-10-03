@@ -62,18 +62,17 @@ const protectUsersAccount = (req, res, next) => {
 };
 
 // Create middleware that only grants access to admin users
-const protectAdmin = (req, res, next) => {
-	const { sessionUser } = req;
+// const protectAdmin = (req, res, next) => {
+// 	const { sessionUser } = req;
 
-	if (sessionUser.role !== 'admin') {
-		return next(new AppError('You do not have the right access level.', 403));
-	}
+// 	if (sessionUser.role !== 'admin') {
+// 		return next(new AppError('You do not have the right access level.', 403));
+// 	}
 
-	next();
-};
+// 	next();
+// };
 
 module.exports = {
 	protectSession,
 	protectUsersAccount,
-	protectAdmin,
 };

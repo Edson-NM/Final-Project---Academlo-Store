@@ -4,6 +4,7 @@ const dotenv = require('dotenv');
 
 // Models
 const { User } = require('../models/user.model');
+const { Product } = require('../models/product.model');
 
 // Utils
 const { catchAsync } = require('../utils/catchAsync.util');
@@ -11,37 +12,17 @@ const { AppError } = require('../utils/appError.util');
 
 dotenv.config({ path: './config.env' });
 
-// Gen random jwt signs
-// require('crypto').randomBytes(64).toString('hex') -> Enter into the node console and paste the command
-
-const getAllUsers = catchAsync(async (req, res, next) => {
-	const users = await User.findAll({
-		attributes: { exclude: ['password'] },
-		where: { status: 'active' },
-	});
-
-	res.status(200).json({
-		status: 'success',
-		data: { users },
-	});
-});
-
 const createUser = catchAsync(async (req, res, next) => {
-	const { name, email, password, role } = req.body;
-
-	if (role !== 'admin' && role !== 'normal') {
-		return next(new AppError('Invalid role', 400));
-	}
+	const { userName, email, password } = req.body;
 
 	// Encrypt the password
 	const salt = await bcrypt.genSalt(12);
 	const hashedPassword = await bcrypt.hash(password, salt);
 
 	const newUser = await User.create({
-		name,
+		userName,
 		email,
 		password: hashedPassword,
-		role,
 	});
 
 	// Remove password from response
@@ -52,26 +33,6 @@ const createUser = catchAsync(async (req, res, next) => {
 		status: 'success',
 		data: { newUser },
 	});
-});
-
-const updateUser = catchAsync(async (req, res, next) => {
-	const { name } = req.body;
-	const { user } = req;
-
-	await user.update({ name });
-
-	res.status(200).json({
-		status: 'success',
-		data: { user },
-	});
-});
-
-const deleteUser = catchAsync(async (req, res, next) => {
-	const { user } = req;
-
-	await user.update({ status: 'deleted' });
-
-	res.status(204).json({ status: 'success' });
 });
 
 const login = catchAsync(async (req, res, next) => {
@@ -103,8 +64,51 @@ const login = catchAsync(async (req, res, next) => {
 	});
 });
 
+const getProductsCreatedByUser = catchAsync(async (req, res, next) => {
+	const { sessionUser } = req;
+
+	const productsCreatedByUser = await Product.findAll({
+		where: { userId: sessionUser.id },
+	});
+
+	if (!productsCreatedByUser)
+		return next(
+			new AppError(
+				'User has not yet created any product. Please create a new one.',
+				400
+			)
+		);
+
+	res.status(200).json({
+		status: 'success',
+		data: {
+			productsCreatedByUser,
+		},
+	});
+});
+
+const updateUser = catchAsync(async (req, res, next) => {
+	const { userName, email } = req.body;
+	const { user } = req;
+
+	await user.update({ userName, email });
+
+	res.status(200).json({
+		status: 'success',
+		data: { user },
+	});
+});
+
+const deleteUser = catchAsync(async (req, res, next) => {
+	const { user } = req;
+
+	await user.update({ status: 'deleted' });
+
+	res.status(204).json({ status: 'success' });
+});
+
 module.exports = {
-	getAllUsers,
+	getProductsCreatedByUser,
 	createUser,
 	updateUser,
 	deleteUser,
