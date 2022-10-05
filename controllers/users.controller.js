@@ -4,7 +4,9 @@ const dotenv = require('dotenv');
 
 // Models
 const { User } = require('../models/user.model');
-const { Product } = require('../models/product.model');
+const { Cart } = require('../models/cart.model');
+const { ProductInCart } = require('../models/productInCart.model');
+const { Order } = require('../models/order.model');
 
 // Utils
 const { catchAsync } = require('../utils/catchAsync.util');
@@ -44,8 +46,6 @@ const login = catchAsync(async (req, res, next) => {
 		where: { email, status: 'active' },
 	});
 
-	// Compare passwords (entered password vs db password)
-	// If user doesn't exists or passwords doesn't match, send error
 	if (!user || !(await bcrypt.compare(password, user.password))) {
 		return next(new AppError('Wrong credentials', 400));
 	}
@@ -104,7 +104,47 @@ const deleteUser = catchAsync(async (req, res, next) => {
 
 	await user.update({ status: 'deleted' });
 
-	res.status(204).json({ status: 'success' });
+	res.status(204).json({
+		status: 'success',
+		message: `The user ${userName.name} has been deleted successfully`,
+	});
+});
+
+const getAllOrdersByUser = catchAsync(async (req, res, next) => {
+	const { sessionUser } = req;
+
+	const allOrdersByUser = await Order.findAll({
+		where: { userId: sessionUser.id },
+		include: {
+			model: Cart,
+			include: {
+				model: ProductInCart,
+				where: { status: 'purchased' },
+			},
+		},
+	});
+
+	res.status(200).json({
+		status: 'success',
+		data: {
+			allOrdersByUser,
+		},
+	});
+});
+
+const getOrderUSerById = catchAsync(async (req, res, next) => {
+	const { id } = req.params;
+
+	const orderUSerById = await Order.findOne({
+		where: { id },
+		include: {
+			model: Cart,
+			include: {
+				model: ProductInCart,
+				where: { status: 'purchased' },
+			},
+		},
+	});
 });
 
 module.exports = {
@@ -113,4 +153,6 @@ module.exports = {
 	updateUser,
 	deleteUser,
 	login,
+	getAllOrdersByUser,
+	getOrderUSerById,
 };

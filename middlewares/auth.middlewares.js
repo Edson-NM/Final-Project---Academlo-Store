@@ -50,7 +50,6 @@ const protectSession = catchAsync(async (req, res, next) => {
 // Check the sessionUser to compare to the one that wants to be updated/deleted
 const protectUsersAccount = (req, res, next) => {
 	const { sessionUser, user } = req;
-	// const { id } = req.params;
 
 	// If the users (ids) don't match, send an error, otherwise continue
 	if (sessionUser.id !== user.id) {
@@ -60,17 +59,6 @@ const protectUsersAccount = (req, res, next) => {
 	// If the ids match, grant access
 	next();
 };
-
-// Create middleware that only grants access to admin users
-// const protectAdmin = (req, res, next) => {
-// 	const { sessionUser } = req;
-
-// 	if (sessionUser.role !== 'admin') {
-// 		return next(new AppError('You do not have the right access level.', 403));
-// 	}
-
-// 	next();
-// };
 
 module.exports = {
 	protectSession,
