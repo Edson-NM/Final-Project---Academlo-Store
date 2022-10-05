@@ -74,7 +74,7 @@ const getProductsCreatedByUser = catchAsync(async (req, res, next) => {
 	if (!productsCreatedByUser)
 		return next(
 			new AppError(
-				'User has not yet created any product. Please create a new one.',
+				'You have not created any product yet. Please create a new one.',
 				400
 			)
 		);
@@ -106,7 +106,7 @@ const deleteUser = catchAsync(async (req, res, next) => {
 
 	res.status(204).json({
 		status: 'success',
-		message: `The user ${userName.name} has been deleted successfully`,
+		message: `The user ${user.userName} has been deleted successfully`,
 	});
 });
 
@@ -143,6 +143,13 @@ const getOrderUSerById = catchAsync(async (req, res, next) => {
 				model: ProductInCart,
 				where: { status: 'purchased' },
 			},
+		},
+	});
+
+	res.status(200).json({
+		status: 'success',
+		data: {
+			orderUSerById,
 		},
 	});
 });

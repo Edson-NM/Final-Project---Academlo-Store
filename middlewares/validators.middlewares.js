@@ -37,4 +37,36 @@ const createUserValidators = [
 	checkValidations,
 ];
 
-module.exports = { createUserValidators };
+const createProductValidator = [
+	body('title')
+		.isString()
+		.withMessage('Title must be a string')
+		.notEmpty()
+		.withMessage('Title cannot be empty')
+		.isLength({ min: 5 })
+		.withMessage('Title must be at least 10 characters'),
+	body('description')
+		.isString()
+		.withMessage('Description must be a string')
+		.notEmpty()
+		.withMessage('Description cannot be empty')
+		.isLength({ min: 10 })
+		.withMessage('Description must be at least 10 characters'),
+	body('price')
+		.isNumeric()
+		.withMessage('Price must be a number')
+		.notEmpty()
+		.withMessage('Price cannot be empty'),
+	body('categoryId')
+		.isNumeric()
+		.withMessage('CategoryId must be a number')
+		.notEmpty()
+		.withMessage('CategoryId cannot be empty'),
+	body('quantity')
+		.isNumeric()
+		.withMessage('Quantity must be a number')
+		.notEmpty()
+		.withMessage('Quantity cannot be empty'),
+];
+
+module.exports = { createUserValidators, createProductValidator };

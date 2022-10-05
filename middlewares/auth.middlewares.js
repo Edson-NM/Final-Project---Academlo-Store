@@ -60,7 +60,19 @@ const protectUsersAccount = (req, res, next) => {
 	next();
 };
 
+const protectProductByUSer = (req, res, next) => {
+	const { sessionUser, product } = req;
+
+	if (sessionUser.id !== product.userId)
+		return next(
+			new AppError(
+				'You did not create this product. Please select a product created by you.'
+			)
+		);
+};
+
 module.exports = {
 	protectSession,
 	protectUsersAccount,
+	protectProductByUSer,
 };
