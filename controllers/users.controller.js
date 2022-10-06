@@ -7,6 +7,7 @@ const { User } = require('../models/user.model');
 const { Cart } = require('../models/cart.model');
 const { ProductInCart } = require('../models/productInCart.model');
 const { Order } = require('../models/order.model');
+const { Product } = require('../models/product.model');
 
 // Utils
 const { catchAsync } = require('../utils/catchAsync.util');
@@ -115,11 +116,14 @@ const getAllOrdersByUser = catchAsync(async (req, res, next) => {
 
 	const allOrdersByUser = await Order.findAll({
 		where: { userId: sessionUser.id },
+		attributes: { exclude: ['createdAt', 'updatedAt'] },
 		include: {
 			model: Cart,
+			attributes: { exclude: ['createdAt', 'updatedAt'] },
 			include: {
 				model: ProductInCart,
 				where: { status: 'purchased' },
+				attributes: { exclude: ['createdAt', 'updatedAt'] },
 			},
 		},
 	});
@@ -137,11 +141,14 @@ const getOrderUSerById = catchAsync(async (req, res, next) => {
 
 	const orderUSerById = await Order.findOne({
 		where: { id },
+		attributes: { exclude: ['createdAt', 'updatedAt'] },
 		include: {
 			model: Cart,
+			attributes: { exclude: ['createdAt', 'updatedAt'] },
 			include: {
 				model: ProductInCart,
 				where: { status: 'purchased' },
+				attributes: { exclude: ['createdAt', 'updatedAt'] },
 			},
 		},
 	});

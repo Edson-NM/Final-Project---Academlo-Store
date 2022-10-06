@@ -86,8 +86,8 @@ const getProductById = catchAsync(async (req, res, next) => {
 		where: { id },
 		attributes: { exclude: ['createdAt', 'updatedAt'] },
 		include: [
-			{ model: Category, attributes: ['id', 'name', 'status'] },
-			{ model: ProductImg, attributes: ['id', 'imgUrl'] },
+			{ model: Category, required: false },
+			{ model: ProductImg, attributes: ['id', 'imgUrl'], required: false },
 		],
 	});
 
@@ -99,7 +99,7 @@ const getProductById = catchAsync(async (req, res, next) => {
 			)
 		);
 
-	const productImgsResult = await getProductImgsById(productById.productImgs);
+	await getProductImgsById(productById.productImgs);
 
 	res.status(200).json({
 		status: 'success',

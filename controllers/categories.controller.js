@@ -6,9 +6,8 @@ const { catchAsync } = require('../utils/catchAsync.util');
 const { AppError } = require('../utils/appError.util');
 
 const getAllActiveCategories = catchAsync(async (req, res, next) => {
-	const categories = await Category.findAll({
-		where: { status: 'active' },
-	});
+	// const { id } = req.params;
+	const categories = await Category.findAll({ where: { status: 'active' } });
 
 	res.status(200).json({
 		status: 'success',
