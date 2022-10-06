@@ -1,4 +1,10 @@
 const express = require('express');
+const helmet = require('helmet');
+const compression = require('compression');
+const morgan = require('morgan');
+const dotenv = require('dotenv');
+
+dotenv.config({ path: './config.env' });
 
 // Routers
 const { usersRouter } = require('./routes/users.routes');
@@ -13,6 +19,16 @@ const app = express();
 
 // Enable Express app to receive JSON data
 app.use(express.json());
+
+// helmet
+app.use(helmet());
+
+// Compression
+app.use(compression());
+
+// Morgan
+if (process.env.NODE_ENV === 'development') app.use(morgan('dev'));
+else if (process.env.NODE_ENV === 'production') app.use(morgan('combined'));
 
 // Define endpoints
 app.use('/api/v1/users', usersRouter);
