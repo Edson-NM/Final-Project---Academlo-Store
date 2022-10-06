@@ -1,29 +1,80 @@
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
+const { ref, uploadBytes } = require('firebase/storage');
 const dotenv = require('dotenv');
 
 // Models
-const { User } = require('../models/user.model');
-const { Cart } = require('../models/cart.model');
-const { ProductInCart } = require('../models/productInCart.model');
 const { Product } = require('../models/product.model');
 const { Category } = require('../models/category.model');
+const { ProductImg } = require('../models/productImg.model');
 
 // Utils
 const { catchAsync } = require('../utils/catchAsync.util');
 const { AppError } = require('../utils/appError.util');
+const {
+	storage,
+	getProductImgs,
+	getProductImgsById,
+} = require('../utils/firebase.util');
 
 dotenv.config({ path: './config.env' });
 
-const createProduct = catchAsync(async (req, res, next) => {});
+const createProduct = catchAsync(async (req, res, next) => {
+	const { title, description, price, categoryId, quantity } = req.body;
+	const { sessionUser } = req;
+
+	const newProduct = await Product.create({
+		title,
+		description,
+		price,
+		categoryId,
+		quantity,
+		userId: sessionUser.id,
+	});
+
+	// Create firebase reference
+	const productImgsPromises = req.files.map(async file => {
+		const [originalName, ext] = file.originalname.split('.');
+
+		const fileName = `products/${
+			newProduct.id
+		}/${originalName}-${Date.now()}.${ext}`;
+
+		const imgRef = ref(storage, fileName);
+
+		// Upload image to Firebase
+		const result = await uploadBytes(imgRef, file.buffer);
+
+		await ProductImg.create({
+			productId: newProduct.id,
+			imgUrl: result.metadata.fullPath,
+		});
+	});
+
+	await Promise.all(productImgsPromises);
+
+	res.status(201).json({
+		status: 'success',
+		data: {
+			newProduct,
+		},
+	});
+});
 
 const getAllAvailableProducts = catchAsync(async (req, res, next) => {
-	const activeProducts = await Product.findAll({ where: { status: 'active' } });
+	const products = await Product.findAll({
+		where: { status: 'active' },
+		attributes: { exclude: ['createdAt', 'updatedAt'] },
+		include: [
+			{ model: Category, attributes: ['id', 'name', 'status'] },
+			{ model: ProductImg, attributes: ['id', 'imgUrl'] },
+		],
+	});
+
+	const productsImgs = await getProductImgs(products);
 
 	res.status(200).json({
 		status: 'success',
 		data: {
-			activeProducts,
+			products: productsImgs,
 		},
 	});
 });
@@ -31,7 +82,14 @@ const getAllAvailableProducts = catchAsync(async (req, res, next) => {
 const getProductById = catchAsync(async (req, res, next) => {
 	const { id } = req.params;
 
-	const productById = await Product.findOne({ where: { id } });
+	const productById = await Product.findOne({
+		where: { id },
+		attributes: { exclude: ['createdAt', 'updatedAt'] },
+		include: [
+			{ model: Category, attributes: ['id', 'name', 'status'] },
+			{ model: ProductImg, attributes: ['id', 'imgUrl'] },
+		],
+	});
 
 	if (!productById)
 		return next(
@@ -40,6 +98,8 @@ const getProductById = catchAsync(async (req, res, next) => {
 				400
 			)
 		);
+
+	const productImgsResult = await getProductImgsById(productById.productImgs);
 
 	res.status(200).json({
 		status: 'success',
@@ -75,54 +135,10 @@ const deleteProduct = catchAsync(async (req, res, next) => {
 	});
 });
 
-const getAllActiveCategories = catchAsync(async (req, res, next) => {
-	const activesCategories = await Category.findAll({
-		where: { status: 'active' },
-	});
-
-	res.status(200).json({
-		status: 'success',
-		data: {
-			activesCategories,
-		},
-	});
-});
-
-const createCategory = catchAsync(async (req, res, next) => {
-	const { name } = req.body;
-
-	const category = await Category.create({ name });
-
-	res.status(201).json({
-		status: 'success',
-		message: `Category ${category} has been created successfully`,
-	});
-});
-const updateCategory = catchAsync(async (req, res, next) => {
-	const { id } = req.params;
-	const { name } = req.body;
-
-	const category = await Category.findOne({ where: { id } });
-
-	if (!category)
-		return next(
-			new AppError('Category you are trying to update, does not exist', 500)
-		);
-
-	await category.update({ name });
-
-	res.status(201).json({
-		status: 'success',
-		message: 'Category has been updated successfully',
-	});
-});
-
 module.exports = {
-	getAllActiveCategories,
-	createCategory,
-	updateCategory,
 	getAllAvailableProducts,
 	getProductById,
 	updateProduct,
 	deleteProduct,
+	createProduct,
 };
